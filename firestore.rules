@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidTelecomRecord(data) {
+      return data.carrier in ['Viettel', 'VinaPhone', 'MobiFone'] &&
+             data.province is string && data.province.size() >= 1 && data.province.size() <= 100 &&
+             data.region in ['Miền Bắc', 'Miền Trung', 'Miền Nam'] &&
+             data.category in ['Thuê bao & Doanh thu', 'Trạm BTS & Sóng', 'Gói cước phổ biến'] &&
+             data.stationCode is string && data.stationCode.size() <= 60 &&
+             data.subscribers is int && data.subscribers >= 0 &&
+             data.revenueBillionVnd is number && data.revenueBillionVnd >= 0 &&
+             data.coverage5gPercent is number && data.coverage5gPercent >= 0 && data.coverage5gPercent <= 100 &&
+             data.popularPackage is string && data.popularPackage.size() <= 80 &&
+             data.latitude is number && data.latitude >= -90 && data.latitude <= 90 &&
+             data.longitude is number && data.longitude >= -180 && data.longitude <= 180 &&
+             data.source is string && data.source.size() >= 1 && data.source.size() <= 80 &&
+             data.notes is string && data.notes.size() <= 500 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidSyncConfig(data) {
+      return data.driveFolderPath is string && data.driveFolderPath.size() >= 1 && data.driveFolderPath.size() <= 200 &&
+             data.driveCsvUrl is string && data.driveCsvUrl.size() <= 500 &&
+             data.localSafUri is string && data.localSafUri.size() <= 500 &&
+             data.autoSyncEnabled is bool &&
+             data.syncHour is int && data.syncHour >= 0 && data.syncHour <= 23 &&
+             data.wifiOnly is bool &&
+             data.zaloWebhookUrl is string && data.zaloWebhookUrl.size() <= 500 &&
+             data.zaloTargetLabel is string && data.zaloTargetLabel.size() <= 120 &&
+             data.lastSyncStatus is string && data.lastSyncStatus.size() <= 80 &&
+             data.lastSyncTimeText is string && data.lastSyncTimeText.size() <= 60 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    function isValidSyncLog(data) {
+      return data.sourcePath is string && data.sourcePath.size() >= 1 && data.sourcePath.size() <= 200 &&
+             data.recordsProcessed is int && data.recordsProcessed >= 0 &&
+             data.status is string && data.status.size() >= 1 && data.status.size() <= 40 &&
+             data.message is string && data.message.size() <= 300 &&
+             data.triggeredBy is string && data.triggeredBy.size() >= 1 && data.triggeredBy.size() <= 40 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    function isValidZaloReport(data) {
+      return data.targetName is string && data.targetName.size() >= 1 && data.targetName.size() <= 120 &&
+             data.channel is string && data.channel.size() >= 1 && data.channel.size() <= 40 &&
+             data.summaryText is string && data.summaryText.size() >= 1 && data.summaryText.size() <= 3000 &&
+             data.status is string && data.status.size() >= 1 && data.status.size() <= 40 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    match /users/{userId} {
+      allow read, write: if false;
+
+      match /telecom_records/{recordId} {
+        allow get: if isOwner(userId) && isValidId(recordId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(recordId) &&
+                         incoming().keys().hasAll([
+                           'carrier', 'province', 'region', 'category', 'stationCode',
+                           'subscribers', 'revenueBillionVnd', 'coverage5gPercent',
+                           'popularPackage', 'latitude', 'longitude', 'source',
+                           'notes', 'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'carrier', 'province', 'region', 'category', 'stationCode',
+                           'subscribers', 'revenueBillionVnd', 'coverage5gPercent',
+                           'popularPackage', 'latitude', 'longitude', 'source',
+                           'notes', 'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidTelecomRecord(incoming());
+        allow update: if isSignedIn() &&
+                         isValidTelecomRecord(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(recordId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'carrier', 'province', 'region', 'category', 'stationCode',
+                           'subscribers', 'revenueBillionVnd', 'coverage5gPercent',
+                           'popularPackage', 'latitude', 'longitude', 'source',
+                           'notes', 'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && isValidId(recordId);
+      }
+
+      match /sync_configs/{configId} {
+        allow get: if isOwner(userId) && isValidId(configId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(configId) &&
+                         incoming().keys().hasAll([
+                           'driveFolderPath', 'driveCsvUrl', 'localSafUri',
+                           'autoSyncEnabled', 'syncHour', 'wifiOnly',
+                           'zaloWebhookUrl', 'zaloTargetLabel',
+                           'lastSyncStatus', 'lastSyncTimeText',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'driveFolderPath', 'driveCsvUrl', 'localSafUri',
+                           'autoSyncEnabled', 'syncHour', 'wifiOnly',
+                           'zaloWebhookUrl', 'zaloTargetLabel',
+                           'lastSyncStatus', 'lastSyncTimeText',
+                           'createdAt', 'updatedAt'
+                         ]) &&
+                         isValidSyncConfig(incoming());
+        allow update: if isSignedIn() &&
+                         isValidSyncConfig(incoming()) &&
+                         isOwner(userId) &&
+                         isValidId(configId) &&
+                         incoming().createdAt == existing().createdAt &&
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'driveFolderPath', 'driveCsvUrl', 'localSafUri',
+                           'autoSyncEnabled', 'syncHour', 'wifiOnly',
+                           'zaloWebhookUrl', 'zaloTargetLabel',
+                           'lastSyncStatus', 'lastSyncTimeText', 'updatedAt'
+                         ]);
+        allow delete: if isOwner(userId) && isValidId(configId);
+      }
+
+      match /sync_logs/{logId} {
+        allow get: if isOwner(userId) && isValidId(logId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(logId) &&
+                         incoming().keys().hasAll([
+                           'sourcePath', 'recordsProcessed', 'status',
+                           'message', 'triggeredBy', 'createdAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'sourcePath', 'recordsProcessed', 'status',
+                           'message', 'triggeredBy', 'createdAt'
+                         ]) &&
+                         isValidSyncLog(incoming());
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(logId);
+      }
+
+      match /zalo_reports/{reportId} {
+        allow get: if isOwner(userId) && isValidId(reportId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId) &&
+                         isValidId(reportId) &&
+                         incoming().keys().hasAll([
+                           'targetName', 'channel', 'summaryText', 'status', 'createdAt'
+                         ]) &&
+                         incoming().keys().hasOnly([
+                           'targetName', 'channel', 'summaryText', 'status', 'createdAt'
+                         ]) &&
+                         isValidZaloReport(incoming());
+        allow update: if false;
+        allow delete: if isOwner(userId) && isValidId(reportId);
+      }
+    }
+  }
+}

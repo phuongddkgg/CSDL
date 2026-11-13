@@ -1,0 +1,6 @@
+{
+  "name": "Telecom CSDL",
+  "description": "Ứng dụng quản lý, phân tích cơ sở dữ liệu nhà mạng Viettel, VinaPhone, MobiFone, đồng bộ Google Drive (My Drive/Viettel/CSDL), bản đồ phủ sóng và gửi báo cáo Zalo tích hợp AI.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

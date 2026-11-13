@@ -1,0 +1,244 @@
+{
+  "entities": {
+    "TelecomRecord": {
+      "title": "TelecomRecord",
+      "description": "Hồ sơ cơ sở dữ liệu nhà mạng Viettel, VinaPhone, MobiFone theo tỉnh/trạm BTS.",
+      "type": "object",
+      "properties": {
+        "carrier": {
+          "type": "string",
+          "enum": ["Viettel", "VinaPhone", "MobiFone"],
+          "description": "Tên nhà mạng viễn thông"
+        },
+        "province": {
+          "type": "string",
+          "description": "Tỉnh/Thành phố"
+        },
+        "region": {
+          "type": "string",
+          "enum": ["Miền Bắc", "Miền Trung", "Miền Nam"],
+          "description": "Khu vực địa lý"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Thuê bao & Doanh thu", "Trạm BTS & Sóng", "Gói cước phổ biến"],
+          "description": "Danh mục dữ liệu"
+        },
+        "stationCode": {
+          "type": "string",
+          "description": "Mã trạm BTS hoặc mã nút mạng"
+        },
+        "subscribers": {
+          "type": "integer",
+          "description": "Số lượng thuê bao"
+        },
+        "revenueBillionVnd": {
+          "type": "number",
+          "description": "Doanh thu ước tính (tỷ VNĐ)"
+        },
+        "coverage5gPercent": {
+          "type": "number",
+          "description": "Tỷ lệ phủ sóng 4G/5G (%)"
+        },
+        "popularPackage": {
+          "type": "string",
+          "description": "Gói cước phổ biến"
+        },
+        "latitude": {
+          "type": "number",
+          "description": "Vĩ độ địa lý"
+        },
+        "longitude": {
+          "type": "number",
+          "description": "Kinh độ địa lý"
+        },
+        "source": {
+          "type": "string",
+          "description": "Nguồn dữ liệu (Google Drive CSV, Nhập thủ công, v.v.)"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Ghi chú vận hành"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Thời gian tạo (FieldValue.serverTimestamp())"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Thời gian cập nhật (FieldValue.serverTimestamp())"
+        }
+      },
+      "required": [
+        "carrier",
+        "province",
+        "region",
+        "category",
+        "stationCode",
+        "subscribers",
+        "revenueBillionVnd",
+        "coverage5gPercent",
+        "popularPackage",
+        "latitude",
+        "longitude",
+        "source",
+        "notes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SyncConfig": {
+      "title": "SyncConfig",
+      "description": "Cấu hình đồng bộ hóa tự động Google Drive và đích gửi báo cáo Zalo.",
+      "type": "object",
+      "properties": {
+        "driveFolderPath": {
+          "type": "string",
+          "description": "Đường dẫn thư mục Google Drive (ví dụ My Drive\\Viettel\\CSDL)"
+        },
+        "driveCsvUrl": {
+          "type": "string",
+          "description": "URL xuất CSV từ Google Drive / Google Sheets"
+        },
+        "localSafUri": {
+          "type": "string",
+          "description": "URI tài liệu đã chọn qua Android Storage Access Framework"
+        },
+        "autoSyncEnabled": {
+          "type": "boolean",
+          "description": "Bật/tắt tự động đồng bộ hàng ngày"
+        },
+        "syncHour": {
+          "type": "integer",
+          "description": "Giờ đồng bộ hàng ngày (0-23)"
+        },
+        "wifiOnly": {
+          "type": "boolean",
+          "description": "Chỉ đồng bộ khi có Wi-Fi"
+        },
+        "zaloWebhookUrl": {
+          "type": "string",
+          "description": "Webhook URL gửi báo cáo tự động tới Zalo OA / Bot"
+        },
+        "zaloTargetLabel": {
+          "type": "string",
+          "description": "Tên mục/nhóm nhận báo cáo Zalo"
+        },
+        "lastSyncStatus": {
+          "type": "string",
+          "description": "Trạng thái lần đồng bộ gần nhất"
+        },
+        "lastSyncTimeText": {
+          "type": "string",
+          "description": "Thời gian đồng bộ gần nhất"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "driveFolderPath",
+        "driveCsvUrl",
+        "localSafUri",
+        "autoSyncEnabled",
+        "syncHour",
+        "wifiOnly",
+        "zaloWebhookUrl",
+        "zaloTargetLabel",
+        "lastSyncStatus",
+        "lastSyncTimeText",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SyncLog": {
+      "title": "SyncLog",
+      "description": "Nhật ký thực thi đồng bộ dữ liệu Google Drive hàng ngày.",
+      "type": "object",
+      "properties": {
+        "sourcePath": {
+          "type": "string"
+        },
+        "recordsProcessed": {
+          "type": "integer"
+        },
+        "status": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "triggeredBy": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "sourcePath",
+        "recordsProcessed",
+        "status",
+        "message",
+        "triggeredBy",
+        "createdAt"
+      ]
+    },
+    "ZaloReport": {
+      "title": "ZaloReport",
+      "description": "Lịch sử báo cáo số liệu viễn thông đã gửi qua Zalo.",
+      "type": "object",
+      "properties": {
+        "targetName": {
+          "type": "string"
+        },
+        "channel": {
+          "type": "string"
+        },
+        "summaryText": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "targetName",
+        "channel",
+        "summaryText",
+        "status",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/telecom_records/{recordId}": {
+      "schema": { "$ref": "#/entities/TelecomRecord" },
+      "description": "Bản ghi CSDL nhà mạng theo người dùng"
+    },
+    "/users/{userId}/sync_configs/{configId}": {
+      "schema": { "$ref": "#/entities/SyncConfig" },
+      "description": "Cấu hình đồng bộ Google Drive & Zalo"
+    },
+    "/users/{userId}/sync_logs/{logId}": {
+      "schema": { "$ref": "#/entities/SyncLog" },
+      "description": "Nhật ký đồng bộ hàng ngày"
+    },
+    "/users/{userId}/zalo_reports/{reportId}": {
+      "schema": { "$ref": "#/entities/ZaloReport" },
+      "description": "Lịch sử gửi báo cáo Zalo"
+    }
+  }
+}
